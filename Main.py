@@ -33,16 +33,19 @@ class Main:
             out = self.append_song_to_playlist(pl, songs=self.Lib)
             self.playlists[out["name"]] = out
 
-        self.lists_w_id = []
+        self.lists_w_id = [{'quit':0}]
         for item in self.playlists.values():
             self.lists_w_id.append({item["name"]: item["id"]})
 
         self.display.spool_string_value("---[Ready]------", "[Awaiting input]")
         self.button_set_up()
+        self.display.spool_string_value(self.lists_w_id[self.index].items()[0][0][:16])
 
         self.player = MusicPlayer.PlayerThread(self.device_id, self.playlists, self.display, self, self.Lib)
+        self.working = True
+
         try:
-            while True:
+            while self.working:
                 time.sleep(10)
         except KeyboardInterrupt:
             print "Have a nice day"
@@ -73,8 +76,12 @@ class Main:
 
     # noinspection PyUnusedLocal
     def accept_button(self, channel):  # button down, pin 24
-        self.player.stop_music()
-        self.player.set_playlist_to_play(self.lists_w_id[self.index].items()[0][1])
+        if self.lists_w_id[self.index].items()[0][0] == "quit":
+            self.working = False
+        else:
+            self.player.stop_music()
+            self.player.set_playlist_to_play(self.lists_w_id[self.index].items()[0][1])
+
 
     # noinspection PyUnusedLocal
     def random_button(self, channel):  # button up, pin 19
