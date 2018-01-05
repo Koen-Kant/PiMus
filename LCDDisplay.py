@@ -1,15 +1,15 @@
 import threading
 import time
-import LCD_Lib
+import LCD_i2c_lib
 
 
 class LCDThread(threading.Thread):
     def __init__(self):
         super(LCDThread, self).__init__()
         self.go = True
-        self.top_string_to_write = "---[Booting]---"
-        self.lower_string_to_write = "-[Please wait]-"
-        LCD_Lib.main_set_up()
+        self.top_string_to_write = "Booting...      "
+        self.lower_string_to_write = "Please wait    "
+        LCD_i2c_lib.main_setup()
         self.start()
 
     def spool_string_value(self, top_string_to_lcd=None, lower_string_to_lcd=None):
@@ -19,14 +19,14 @@ class LCDThread(threading.Thread):
             self.lower_string_to_write = lower_string_to_lcd
 
     def string_to_lcd(self):
-        LCD_Lib.set_on_lcd(self.top_string_to_write, self.lower_string_to_write)
+        LCD_i2c_lib.set_on_lcd(self.top_string_to_write, self.lower_string_to_write)
 
     def run(self):
         while self.go:
             try:
                 self.string_to_lcd()
             except UnicodeEncodeError:
-                self.top_string_to_write = "---[Odd char]---"
+                self.top_string_to_write = "    Odd char    "
             time.sleep(0.2)
 
     def stop(self):

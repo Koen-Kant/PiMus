@@ -5,19 +5,19 @@ import time
 
 
 class PlayerThread(threading.Thread):
-    def __init__(self, dev_id, pls, display, host, lib):
+    def __init__(self, pls, display, host, lib):
         super(PlayerThread, self).__init__()
         self.go = True
         self.mus_go = True
         self.playlist_to_play = None
         self.playing = None
-        self.device_id = dev_id
         self.playlists = pls
         self.core = host.get_core()
         self.library = host.get_songs()
         self.LCD = display
         self.lib = lib
-        self.player = vlc.MediaPlayer()
+        self.inst = vlc.Instance()
+        self.player = self.inst.media_player_new()
         self.start()
 
     def run(self):
@@ -49,15 +49,16 @@ class PlayerThread(threading.Thread):
                 self.stop_music()
 
     def play_song(self, song):
-        sonx = self.core.get_stream_url(song['id'], device_id=self.device_id)
-        self.player = vlc.MediaPlayer(sonx)
+        sonx = self.core.get_stream_url(song['id'])
+        media = self.inst.media_new(sonx)
+        self.player.set_media(media)
         self.player.play()
         song_len = (int(song['durationMillis'])/1000)
-        self.LCD.spool_string_value(top_string_to_lcd="[{}]".format(song["title"][:14]))
+        self.LCD.spool_string_value(top_string_to_lcd="{}".format(song["title"][:16]))
         while 0 <= self.player.get_position() < 0.985:
             sec = int(self.player.get_position()*float(song_len))
             percent = int(self.player.get_position()*100)
-            self.LCD.spool_string_value(lower_string_to_lcd="[{:3}/{:3}s: {:3}%]".format(sec, song_len, percent))
+            self.LCD.spool_string_value(lower_string_to_lcd="{:3}/{:3}s: {:3}%  ".format(sec, song_len, percent))
             time.sleep(0.3)
         self.player.stop()
 
@@ -73,5 +74,5 @@ class PlayerThread(threading.Thread):
         self.player.stop()
         self.mus_go = False
         self.playlist_to_play = None
-        self.LCD.spool_string_value("[Stopping music]", "-[Please wait]--")
+        self.LCD.spool_string_value("Stopping music..", "  Please wait   ")
         time.sleep(0.3)
